@@ -7,6 +7,8 @@ from explosion import Explosion
 
 class Game:
     def __init__(self):
+        icon = pygame.image.load("icon.ico")
+        pygame.display.set_icon(icon)
         self.window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption(GAME_NAME)
         self.player = Player(0)
