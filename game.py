@@ -9,7 +9,8 @@ class Game:
     def __init__(self):
         icon = pygame.image.load("icon.ico")
         pygame.display.set_icon(icon)
-        self.window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+
+        self.window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.FULLSCREEN)
         pygame.display.set_caption(GAME_NAME)
         self.player = Player(0)
         self.asteroids = []
@@ -18,10 +19,13 @@ class Game:
         self.bg_img = pygame.transform.scale(pygame.image.load("./assets/img/bg.png").convert_alpha(), (WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.mouse.set_visible(False)
         self.state = GAME_STATE_MENU
+        
+        self.asteroid_spawn_prob = 0.03
 
         # score
 
         self.font = pygame.font.Font("./assets/font/font.otf", 32)
+        self.font_small = pygame.font.Font("./assets/font/font.otf", 18)
 
         self.score = 0
         self.asteroids_destroyed = 0
@@ -110,6 +114,12 @@ class Game:
                     elif event.key == pygame.K_RETURN and self.state == GAME_STATE_OVER:
                         self.reset_game()
 
+                    elif event.key == pygame.K_c and self.state == GAME_STATE_MENU:
+                        self.state = GAME_STATE_CONTROLS
+
+                    elif event.key == pygame.K_RETURN and self.state == GAME_STATE_CONTROLS:
+                        self.state = GAME_STATE_MENU
+
 
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.state == GAME_STATE_MENU:
                     
@@ -131,13 +141,12 @@ class Game:
 
                 self.window.blit(self.bg_img, (0,0))
             
-                heading_text = self.font.render(GAME_NAME, True, (255,255,255))
+                heading_text = self.font.render(GAME_NAME, True, WHITE)
 
                 self.window.blit(heading_text, (WINDOW_WIDTH // 2 - heading_text.get_width() //2, 60))
 
-                developer_text = self.font.render(DEVELOPER, True, (255,255,255))
-
-                self.window.blit(developer_text, (WINDOW_WIDTH - developer_text.get_width() - 20, WINDOW_HEIGHT - developer_text.get_height() - 20))
+                self.show_developer_text()
+                self.show_control_text("Press c for Controls")
 
                 self.ship_rects.clear()
 
@@ -170,7 +179,7 @@ class Game:
                     pygame.draw.circle(self.window, (255, 0, 0), mouse_pos, 10, 4)
 
                     if cell_rect.collidepoint(mouse_pos):
-                        pygame.draw.rect(self.window, (255,255,255), cell_rect, 2)
+                        pygame.draw.rect(self.window, WHITE, cell_rect, 2)
 
 
 
@@ -182,8 +191,12 @@ class Game:
                 self.survival_time += dt
                 self.score = int(self.survival_time) + self.asteroids_destroyed * 10
 
-            
-                if random.random() < 0.03:   
+                difficulty = self.survival_time * 0.002 + self.asteroids_destroyed * 0.0005
+
+                self.asteroid_spawn_prob = min(0.03 + difficulty, 0.25)
+                self.show_control_text(f"diff:{self.asteroid_spawn_prob:.3f}")
+
+                if random.random() < self.asteroid_spawn_prob and len(self.asteroids) < 30:   
                     self.asteroids.append(Asteroid(self.player.rect.center))
 
 
@@ -210,37 +223,89 @@ class Game:
 
             if (self.state == GAME_STATE_OVER):
 
-                over_text = self.font.render("GAME OVER", True, (255,0,0))
-                restart_text = self.font.render("Press ENTER to Restart", True, (255,255,255))
+                over_text = self.font.render("GAME OVER", True, RED)
+                
 
                 self.window.blit(over_text,
                     (WINDOW_WIDTH//2 - over_text.get_width()//2,
                     WINDOW_HEIGHT//2 - 40))
 
-                self.window.blit(restart_text,
-                    (WINDOW_WIDTH//2 - restart_text.get_width()//2,
-                    WINDOW_HEIGHT//2 + 10))
+                self.show_control_text("Press ENTER to Restart")
                 
-                developer_text = self.font.render(DEVELOPER, True, (255,255,255))
-
-                self.window.blit(developer_text, (WINDOW_WIDTH - developer_text.get_width() - 20, WINDOW_HEIGHT - developer_text.get_height() - 20))
+                self.show_developer_text()
 
                 if(self.new_high_score):
-                    new_high_score_text = self.font.render("NEW HIGH SCORE", True, (255,255,0))
+                    new_high_score_text = self.font.render("NEW HIGH SCORE", True, YELLOW)
                     self.window.blit(new_high_score_text, (WINDOW_WIDTH//2 - new_high_score_text.get_width()//2, WINDOW_HEIGHT // 2 + 60))
+
+            if (self.state == GAME_STATE_CONTROLS):
+
+                self.window.blit(self.bg_img, (0,0))
+
+                self.show_control_text("Press Enter for Menu")
+                self.show_developer_text()
+
+                title_text = self.font.render("CONTROLS", True, YELLOW)
+
+                move_text = self.font.render("Move : W A S D", True, WHITE)
+                aim_text = self.font.render("Aim : Mouse", True, WHITE)
+                shoot_text = self.font.render("Shoot : Mouse Left", True, WHITE)
+                restart_text = self.font.render("Restart (Game Over) : Enter", True, WHITE)
+                exit_text = self.font.render("Exit Game : Esc", True, RED)
+
+
+
+                # Title
+                self.window.blit(
+                    title_text,
+                    (WINDOW_WIDTH//2 - title_text.get_width()//2,
+                    WINDOW_HEIGHT//2 - 120)
+                )
+
+                # Controls list
+                self.window.blit(
+                    move_text,
+                    (WINDOW_WIDTH//2 - move_text.get_width()//2,
+                    WINDOW_HEIGHT//2 - 60)
+                )
+
+                self.window.blit(
+                    aim_text,
+                    (WINDOW_WIDTH//2 - aim_text.get_width()//2,
+                    WINDOW_HEIGHT//2 - 20)
+                )
+
+                self.window.blit(
+                    shoot_text,
+                    (WINDOW_WIDTH//2 - shoot_text.get_width()//2,
+                    WINDOW_HEIGHT//2 + 20)
+                )
+
+                self.window.blit(
+                    restart_text,
+                    (WINDOW_WIDTH//2 - restart_text.get_width()//2,
+                    WINDOW_HEIGHT//2 + 60)
+                )
+
+                self.window.blit(
+                    exit_text,
+                    (WINDOW_WIDTH//2 - exit_text.get_width()//2,
+                    WINDOW_HEIGHT//2 + 100)
+                )
+
 
 
             pygame.display.flip()
 
     def draw_hud(self):
-        score_text = self.font.render(f"Score: {self.score}", True, (255,255,255))
-        kills_text = self.font.render(f"Asteroids: {self.asteroids_destroyed}", True, (255,255,255))
-        time_text = self.font.render(f"Time: {int(self.survival_time)}", True, (255,255,255))
+        score_text = self.font.render(f"Score: {self.score}", True, WHITE)
+        kills_text = self.font.render(f"Asteroids: {self.asteroids_destroyed}", True, WHITE)
+        time_text = self.font.render(f"Time: {int(self.survival_time)}", True, WHITE)
 
         if(self.player.health <= 40):
-            health_text_color = (255,0,0)
+            health_text_color = RED
         else:
-            health_text_color = (255,255,255)
+            health_text_color = WHITE
 
             
         health_text = self.font.render(f"Health: {int(self.player.health)}", True, health_text_color)
@@ -250,9 +315,20 @@ class Game:
         self.window.blit(time_text, (WINDOW_WIDTH - time_text.get_width() - 20, 20))
         self.window.blit(health_text, (WINDOW_WIDTH - health_text.get_width() - 20, 60))
 
+
+
+    def show_control_text(self, text, color=WHITE):     
+        control_text = self.font_small.render(text, True, color)
+        self.window.blit(control_text, (WINDOW_WIDTH//2 - control_text.get_width()//2, WINDOW_HEIGHT - control_text.get_height() - 100))
+
+
+
+    def show_developer_text(self):
+        developer_text = self.font_small.render(DEVELOPER, True, WHITE)
+        self.window.blit(developer_text, (WINDOW_WIDTH - developer_text.get_width() - 20, WINDOW_HEIGHT - developer_text.get_height() - 20))
+
+
     def check_collision(self):
-
-
 
         for i, asteroid in enumerate(self.asteroids):
             for a in self.asteroids[i+1:]:
@@ -264,6 +340,21 @@ class Game:
                 
                     asteroid.direction = -asteroid.direction
                     a.direction = -a.direction
+                    asteroid.health -= 5
+                    a.health -= 5
+
+                    if(asteroid.health <= 0):
+                        self.explosion_sound.play()
+                        self.explosions.append(Explosion(asteroid.rect.center, self.explosion_frames))
+                        self.asteroids.remove(asteroid)
+                        break
+
+                    if(a.health <= 0):
+                        self.explosion_sound.play()
+                        self.explosions.append(Explosion(a.rect.center, self.explosion_frames))
+                        self.asteroids.remove(a)
+                        break
+
 
                 
         for asteroid in self.asteroids[:]:

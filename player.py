@@ -31,8 +31,8 @@ class Player:
 
     def input(self):
         keys = pygame.key.get_pressed()
-        self.direction.x = keys[pygame.K_d] - keys[pygame.K_a]
-        self.direction.y = keys[pygame.K_s] - keys[pygame.K_w]
+        self.direction.x = (keys[pygame.K_d] or keys[pygame.K_RIGHT]) - (keys[pygame.K_a] or keys[pygame.K_LEFT])
+        self.direction.y = (keys[pygame.K_s] or keys[pygame.K_DOWN]) - (keys[pygame.K_w] or keys[pygame.K_UP])
         if self.direction.length() > 0:
             self.direction = self.direction.normalize()
 

@@ -7,6 +7,7 @@ class Asteroid:
         self.image = pygame.image.load(f"./assets/img/asteriods/Asteroid_{random.randint(1, 5)}.png").convert_alpha()
         self.image = pygame.transform.smoothscale(self.image,(self.image.get_width() // 5, self.image.get_height() // 5))
         # self.image = pygame.transform.rotate(self.image, random.randint(0, 360))
+        
         self.rect = self.image.get_rect()
 
         side = random.choice(["top","bottom","left","right"])
